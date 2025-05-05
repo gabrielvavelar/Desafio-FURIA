@@ -10,10 +10,10 @@ Você pode interagir com o bot diretamente no Telegram usando o link:
 Ou, se preferir, pesquise pelo nome do bot na barra de busca do Telegram:  
 **`Furiagg_cs_bot`**
 
-## Funcionaliades
+## Funcionalidades
 - Exibir data e adversário do próximo jogo da FURIA.
 - Mostrar o resultado último resultado da equipe.
-- Listar o elenco atual da FURIA.
+- Listar o elenco atual da equipe.
 - Apresentar informações sobre a história, fundação e fundadores da organização.
 - Fornecer links das redes sociais oficiais e loja da FURIA.
 
