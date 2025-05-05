@@ -6,22 +6,25 @@ import os
 
 from furia_cs_data import get_furia_last_game, get_furia_next_game, get_furia_lineup
 
+# Configuração do logger para registrar mensagens de log
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Inicializa o cliente do Amazon Lex
 lex_client = boto3.client('lexv2-runtime')
 
+# Função principal do Lambda para processar o evento e chamar o Lex
 def lambda_handler(event, context):
     try:
+        # Verifica se o evento contém um corpo com a mensagem
         if 'body' in event:
             body = json.loads(event['body'])
-
             if 'message' in body:
                 chat_id = body['message']['chat']['id']
                 message = body['message']['text']
-
+                
+                # Chama o Lex para processar a mensagem
                 lex_response = call_lex(chat_id, message)
-
                 process_lex_response(chat_id, lex_response)
             else:
                 logger.warning("'message' não encontrado no corpo")
@@ -34,9 +37,10 @@ def lambda_handler(event, context):
         logger.error(f"Erro geral: {str(e)}")
         return {'statusCode': 500, 'body': json.dumps('Erro interno')}
 
-
+# Função para chamar o Amazon Lex e obter a resposta
 def call_lex(chat_id, message):
     try:
+        # Chama a API do Amazon Lex para reconhecer a intenção
         bot_id = os.environ.get('bot_id')
         bot_alias_id = os.environ.get('bot_alias_id')
 
@@ -49,21 +53,24 @@ def call_lex(chat_id, message):
         )
 
         return response
-
     except Exception as e:
         logger.error(f"Erro ao chamar Lex: {str(e)}")
         raise
 
+# Função para enviar mensagens do Lex para o Telegram
 def send_lex_messages(chat_id, response):
+    # Envia as mensagens geradas pelo Lex para o Telegram
     for msg in response.get('messages', []):
         send_message(chat_id, msg.get('content', ''))
 
+# Função para obter o nome do time da resposta do Lex
 def get_team_from_slots(response):
     try:
         return response['sessionState']['intent']['slots']['TeamName']['value']['interpretedValue']
     except (TypeError, KeyError):
         return 'furia'
 
+# Função para enviar mensagens para o Telegram usando a API
 def send_message(chat_id, text):
     try:
         telegram_token = os.environ.get('telegram_token')
@@ -80,9 +87,11 @@ def send_message(chat_id, text):
         logger.error(f"Erro ao enviar mensagem para Telegram: {str(e)}")
         raise
 
+# Função para responder com uma mensagem padrão quando o time não é FURIA
 def only_furia_response():
     return "Esse assunto aí não é comigo. O que realmente entendo é sobre a FURIA! 😎"
 
+# Função para enviar funcionalidades disponíveis
 def handle_functionalities(chat_id, response):
     send_lex_messages(chat_id, response)
     msg = (
@@ -100,6 +109,7 @@ def handle_functionalities(chat_id, response):
     )
     send_message(chat_id, msg)
 
+# Função para processar e enviar informações sobre o último jogo da FURIA
 def handle_last_game(chat_id, response):
     team = get_team_from_slots(response)
 
@@ -111,6 +121,7 @@ def handle_last_game(chat_id, response):
         msg = only_furia_response()
         send_message(chat_id, msg)
 
+# Função para processar e enviar informações sobre o próximo jogo da FURIA
 def handle_next_game(chat_id, response):
     team = get_team_from_slots(response)
 
@@ -122,6 +133,7 @@ def handle_next_game(chat_id, response):
         msg = only_furia_response()
         send_message(chat_id, msg)
 
+# Função para processar e enviar informações sobre o elenco da FURIA
 def handle_lineup(chat_id, response):
     team = get_team_from_slots(response)
 
@@ -133,6 +145,7 @@ def handle_lineup(chat_id, response):
         msg = only_furia_response()
         send_message(chat_id, msg)
 
+# Função para enviar os links das redes sociais da FURIA
 def handle_social_media(chat_id, response):
     send_lex_messages(chat_id, response)
     msg = (
@@ -142,6 +155,7 @@ def handle_social_media(chat_id, response):
     )
     send_message(chat_id, msg)
 
+# Dicionário de intenções e seus respectivos manipuladores
 INTENT_HANDLERS = {
     'GreetingIntent': send_lex_messages,
     'FunctionalitiesIntent': handle_functionalities,
@@ -157,6 +171,7 @@ INTENT_HANDLERS = {
     'SocialMediaIntent': handle_social_media,
 }
 
+# Função para processar a resposta do Lex e chamar o manipulador adequado
 def process_lex_response(chat_id, response):
     intent_name = response.get('sessionState', {}).get('intent', {}).get('name', 'indefinido')
 
