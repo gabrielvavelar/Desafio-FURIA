@@ -22,6 +22,9 @@ Ou, se preferir, pesquise pelo nome do bot na barra de busca do Telegram:
 - AWS Lambda
 - PandaScore Api
 - Telegram
-  
+
+## Arquitetura AWS
+![Arquitetura AWS](assets/arquitetura_aws.jpg)
+
 ## Autor
 [Gabriel Venancio de Avelar](https://github.com/gabrielvavelar)
